@@ -2,7 +2,9 @@ package com.tenacy.snaplink.api.controller;
 
 import com.tenacy.snaplink.domain.Url;
 import com.tenacy.snaplink.exception.UrlExpiredException;
+import com.tenacy.snaplink.service.ClickTrackingService;
 import com.tenacy.snaplink.service.UrlService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +19,10 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class RedirectController {
     private final UrlService urlService;
+    private final ClickTrackingService clickTrackingService;
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode) {
+    public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode, HttpServletRequest request) { // HttpServletRequest 파라미터 추가 필요
         Url url = urlService.getUrlByShortCode(shortCode);
 
         // 만료 검사
@@ -27,8 +30,8 @@ public class RedirectController {
             throw new UrlExpiredException(shortCode);
         }
 
-        // 클릭 카운트 증가 (비동기로 처리하면 더 좋음)
-        urlService.incrementClickCount(shortCode);
+        // 클릭 추적 및 통계 업데이트 (추후 비동기 처리)
+        clickTrackingService.trackClick(shortCode, request);
 
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(url.getOriginalUrl()))

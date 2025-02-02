@@ -28,7 +28,7 @@ public class UrlService {
 
     @Cacheable(value = "urls", key = "#shortCode", unless = "#result == null")
     public Url getUrlByShortCode(String shortCode) {
-        return urlRepository.findByShortCode(shortCode)
+        return urlRepository.findActiveByShortCode(shortCode)
                 .orElseThrow(() -> new UrlNotFoundException(shortCode));
     }
 
@@ -72,8 +72,10 @@ public class UrlService {
     @Transactional
     @CachePut(value = "urls", key = "#shortCode")
     public Url incrementClickCount(String shortCode) {
-        Url url = getUrlByShortCode(shortCode);
-        url.setClickCount(url.getClickCount() + 1);
-        return urlRepository.save(url);
+        // 단일 쿼리로 클릭 카운트 증가
+        urlRepository.incrementClickCount(shortCode);
+
+        // 캐시 업데이트를 위해 업데이트된 엔티티 반환
+        return getUrlByShortCode(shortCode);
     }
 }
