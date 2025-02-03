@@ -15,6 +15,7 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
     Optional<Url> findByShortCode(String shortCode);
     List<Url> findByExpiresAtBefore(LocalDateTime now);
     boolean existsByShortCode(String shortCode);
+    double countByExpiresAtAfterOrExpiresAtIsNull(LocalDateTime now);
 
     @Query("SELECT u FROM Url u WHERE u.shortCode = :shortCode AND (u.expiresAt IS NULL OR u.expiresAt > CURRENT_TIMESTAMP)")
     Optional<Url> findActiveByShortCode(@Param("shortCode") String shortCode);
