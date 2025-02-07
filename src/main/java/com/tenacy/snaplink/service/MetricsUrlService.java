@@ -60,7 +60,9 @@ public class MetricsUrlService implements UrlServiceInterface {
 
                             // 캐시 히트 여부 확인 (구현에 따라 달라질 수 있음)
                             // 여기서는 응답 시간이 10ms 미만이면 캐시 히트로 가정
-                            if (sample.stop(Timer.builder("temp").register(meterRegistry)) < TimeUnit.MILLISECONDS.toNanos(10)) {
+                            long temp = sample.stop(Timer.builder("temp").register(meterRegistry));
+                            System.out.print(temp);
+                            if (temp < TimeUnit.MILLISECONDS.toNanos(10)) {
                                 cacheHitCounter.increment();
                                 cacheHit[0] = true;
                             } else {
