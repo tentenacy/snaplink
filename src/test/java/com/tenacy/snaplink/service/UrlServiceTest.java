@@ -6,9 +6,13 @@ import com.tenacy.snaplink.domain.Url;
 import com.tenacy.snaplink.domain.UrlRepository;
 import com.tenacy.snaplink.exception.UrlNotFoundException;
 import com.tenacy.snaplink.util.Base62Encoder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
@@ -17,12 +21,12 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class UrlServiceTest {
     @Autowired
+    @Qualifier("originalUrlService")
     private UrlService urlService;
 
     @MockitoBean
@@ -30,6 +34,17 @@ public class UrlServiceTest {
 
     @MockitoBean
     private Base62Encoder encoder;
+
+    @MockitoBean
+    private CacheManager cacheManager;
+
+    @BeforeEach
+    public void setup() {
+        // 빈 캐시 반환하도록 설정
+        Cache emptyCache = mock(Cache.class);
+        when(cacheManager.getCache("urls")).thenReturn(emptyCache);
+        when(emptyCache.get(any())).thenReturn(null);
+    }
 
     @Test
     public void testCreateShortUrl() {
@@ -62,7 +77,7 @@ public class UrlServiceTest {
         url.setCreatedAt(LocalDateTime.now());
         url.setClickCount(0L);
 
-        when(urlRepository.findByShortCode("abc1234")).thenReturn(Optional.of(url));
+        when(urlRepository.findActiveByShortCode("abc1234")).thenReturn(Optional.of(url));
 
         // when
         Url result = urlService.getUrlByShortCode("abc1234");
@@ -71,19 +86,19 @@ public class UrlServiceTest {
         assertNotNull(result);
         assertEquals("https://example.com", result.getOriginalUrl());
 
-        verify(urlRepository).findByShortCode("abc1234");
+        verify(urlRepository).findActiveByShortCode("abc1234");
     }
 
     @Test
     public void testGetUrlByShortCode_NotFound() {
         // given & when
-        when(urlRepository.findByShortCode("notfound")).thenReturn(Optional.empty());
+        when(urlRepository.findActiveByShortCode("notfound")).thenReturn(Optional.empty());
 
         // then
         assertThrows(UrlNotFoundException.class, () -> {
             urlService.getUrlByShortCode("notfound");
         });
 
-        verify(urlRepository).findByShortCode("notfound");
+        verify(urlRepository).findActiveByShortCode("notfound");
     }
 }
