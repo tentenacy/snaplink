@@ -1,0 +1,42 @@
+spring:
+  profiles:
+    active: dev
+  datasource:
+    hikari:
+      # HikariCP ??? ? ?? ?
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      # HikariCP ??? ? ?? ?
+#      maximum-pool-size: 20              # ?? ?? ? ??
+#      minimum-idle: 5                    # ?? ?? ?? ?
+#      idle-timeout: 300000               # ?? ?? ?? ?? (5?)
+#      max-lifetime: 1800000              # ?? ?? (30?)
+#      connection-timeout: 20000          # ?? ???? (20?)
+#      connection-test-query: SELECT 1    # ?? ??? ?? ??
+#      pool-name: SnapLinkHikariPool      # ??? ? ?? (?????)
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        url.redirect.time: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+        url.redirect.time: 0.5, 0.95, 0.99
+  info:
+    git:
+      mode: full

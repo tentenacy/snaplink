@@ -1,0 +1,37 @@
+spring:
+  # 데이터베이스 설정
+  datasource:
+    url: jdbc:mysql://localhost:3306/snaplink-test?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 테스트 환경에서는 항상 새로 생성
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  # Redis 설정
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 5000
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: INFO
+    com.yourcompany.snaplink: DEBUG
+
+# 애플리케이션 설정
+app:
+  shorturl:
+    domain: http://localhost:8080
