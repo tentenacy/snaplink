@@ -20,7 +20,7 @@ services:
       - SPRING_JPA_DATABASE=mysql
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - APP_SHORTURL_DOMAIN=http://${DOMAIN_NAME}
-      - JAVA_OPTS=-Xms128m -Xmx256m -XX:MaxMetaspaceSize=128m -XX:CompressedClassSpaceSize=64m -Xss256k -XX:+UseG1GC -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Djava.security.egd=file:/dev/./urandom -XX:+ExitOnOutOfMemoryError
+      - JAVA_OPTS=-Xms512m -Xmx1024m -XX:MaxMetaspaceSize=256m -XX:CompressedClassSpaceSize=128m -Xss512k -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom -XX:+ExitOnOutOfMemoryError
     depends_on:
       - db
       - redis

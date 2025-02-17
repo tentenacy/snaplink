@@ -29,7 +29,7 @@ logging:
     org.hibernate: INFO
     org.hibernate.SQL: DEBUG # SQL 쿼리 로깅
     org.hibernate.type.descriptor.sql: TRACE # SQL 파라미터 로깅
-    com.yourcompany.snaplink: DEBUG # 애플리케이션 패키지 로깅 레벨 (실제 패키지명으로 수정 필요)
+    com.tenacy.snaplink: DEBUG # 애플리케이션 패키지 로깅 레벨 (실제 패키지명으로 수정 필요)
 
 # 애플리케이션 설정
 app:
