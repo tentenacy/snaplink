@@ -5,9 +5,13 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "urls")
 @Data
+@Entity
+@Table(name = "urls", indexes = {
+        @Index(name = "idx_url_short_code_expires", columnList = "shortCode, expiresAt"),
+        @Index(name = "idx_url_expires_at", columnList = "expiresAt"),
+        @Index(name = "idx_url_click_count", columnList = "clickCount")
+})
 public class Url {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
