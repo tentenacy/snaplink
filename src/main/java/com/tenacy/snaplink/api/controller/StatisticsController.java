@@ -4,6 +4,11 @@ import com.tenacy.snaplink.api.dto.UrlDto;
 import com.tenacy.snaplink.domain.Url;
 import com.tenacy.snaplink.service.StatisticsService;
 import com.tenacy.snaplink.service.UrlService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/stats")
 @RequiredArgsConstructor
+@Tag(name = "2. 통계 API", description = "")
 public class StatisticsController {
     private final UrlService urlService;
     private final StatisticsService statisticsService;
@@ -26,7 +32,12 @@ public class StatisticsController {
     private String domain;
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<Map<String, Object>> getUrlStats(@PathVariable String shortCode) {
+    @Operation(summary = "URL 통계", description = "")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "성공"))
+    public ResponseEntity<Map<String, Object>> getUrlStats(
+            @Parameter(description = "단축 URL 맨 끝에 있는 7자리 코드입니다.")
+            @PathVariable String shortCode
+    ) {
         Map<String, Object> stats = new HashMap<>();
 
         // 기본 정보

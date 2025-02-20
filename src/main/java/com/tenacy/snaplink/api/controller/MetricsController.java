@@ -2,6 +2,11 @@ package com.tenacy.snaplink.api.controller;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +21,13 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/api/v1/metrics")
 @RequiredArgsConstructor
+@Tag(name = "3. 메트릭 API", description = "")
 public class MetricsController {
     private final MeterRegistry meterRegistry;
 
     @GetMapping
+    @Operation(summary = "전체 메트릭 조회", description = "")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "성공"))
     public ResponseEntity<Map<String, Object>> getMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
@@ -65,7 +73,9 @@ public class MetricsController {
     }
 
     // 상세 메트릭 (지정된 기간의 시계열 데이터)
+    @Hidden
     @GetMapping("/timeseries")
+    @Operation(summary = "상세 메트릭 조회 (미구현)", description = "")
     public ResponseEntity<Map<String, Object>> getTimeseriesMetrics(
             @RequestParam(defaultValue = "5") int minutes) {
         // 실제 구현에서는 시계열 데이터를 수집하는 로직 추가

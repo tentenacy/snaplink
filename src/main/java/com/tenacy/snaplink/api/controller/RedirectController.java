@@ -4,6 +4,7 @@ import com.tenacy.snaplink.domain.Url;
 import com.tenacy.snaplink.exception.UrlExpiredException;
 import com.tenacy.snaplink.service.ClickTrackingService;
 import com.tenacy.snaplink.service.MetricsUrlService;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ public class RedirectController {
     private final ClickTrackingService clickTrackingService;
     private final MetricsUrlService metricsService;
 
+    @Hidden
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode, HttpServletRequest request) {
         // 타이머로 전체 요청 시간 측정
