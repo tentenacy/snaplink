@@ -1,7 +1,7 @@
 package com.tenacy.snaplink.service;
 
 import com.tenacy.snaplink.api.dto.UrlCreationRequest;
-import com.tenacy.snaplink.api.dto.UrlDto;
+import com.tenacy.snaplink.api.dto.UrlResponse;
 import com.tenacy.snaplink.domain.Url;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -87,7 +87,7 @@ public class MetricsUrlService implements UrlServiceInterface {
     }
 
     @Override
-    public UrlDto createShortUrl(UrlCreationRequest request) {
+    public UrlResponse createShortUrl(UrlCreationRequest request) {
         try {
             return urlCreationTimer.record(() -> {
                 try {

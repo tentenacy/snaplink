@@ -1,18 +1,15 @@
 package com.tenacy.snaplink.exception;
 
-import com.tenacy.snaplink.api.controller.MetricsController;
-import com.tenacy.snaplink.api.controller.StatisticsController;
-import com.tenacy.snaplink.api.controller.UrlController;
 import io.micrometer.core.instrument.Counter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(annotations = {RestController.class}, basePackageClasses = {UrlController.class, StatisticsController.class, MetricsController.class})
+@RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
     private final Counter errorCounter;
@@ -22,35 +19,38 @@ public class GlobalExceptionHandler {
      * CustomCollectionValidator로 검증 시 binding 못하는 경우
      */
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<ErrorResponse> handleBindException(final BindException ex) {
+    public ResponseEntity<ErrorResponse> handleBindException(final BindException e) {
         errorCounter.increment();
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of("Invalid input", HttpStatus.BAD_REQUEST.value(), ex.getBindingResult()));
+        return new ResponseEntity<>(ErrorResponse.of(CommonErrorCode.INVALID_INPUT_VALUE, e.getBindingResult()),
+                HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(UrlNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUrlNotFound(UrlNotFoundException ex) {
+    /**
+     * 타입이 일치하지 않아 binding 못하는 경우
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException() {
         errorCounter.increment();
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND.value()));
+        return new ResponseEntity<>(ErrorResponse.of(CommonErrorCode.INVALID_INPUT_VALUE), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({DuplicateShortCodeException.class, UrlExpiredException.class})
-    public ResponseEntity<ErrorResponse> handleDuplicateShortCode(DuplicateShortCodeException ex) {
+    /**
+     * SnapLinkException 하위 클래스
+     */
+    @ExceptionHandler(SnapLinkException.class)
+    public ResponseEntity<ErrorResponse> handleSnapLinkException(final SnapLinkException e) {
         errorCounter.increment();
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
+        BaseErrorCode code = e.getErrorCode();
+        return new ResponseEntity<>(ErrorResponse.of(code), HttpStatus.valueOf(code.getErrorReason().getStatus()));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception e) {
         errorCounter.increment();
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("An unexpected error occurred",
-                        HttpStatus.INTERNAL_SERVER_ERROR.value()));
+        return new ResponseEntity<>(ErrorResponse.of(CommonErrorCode.INTERNAL_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

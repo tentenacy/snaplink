@@ -1,5 +1,7 @@
 package com.tenacy.snaplink.api.controller;
 
+import com.tenacy.snaplink.api.dto.MetricsResponse;
+import com.tenacy.snaplink.util.DocumentationDescriptions;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -21,14 +23,14 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/api/v1/metrics")
 @RequiredArgsConstructor
-@Tag(name = "3. 메트릭 API", description = "")
+@Tag(name = "3. 메트릭 API", description = DocumentationDescriptions.TAG_METRICS_API)
 public class MetricsController {
     private final MeterRegistry meterRegistry;
 
     @GetMapping
-    @Operation(summary = "전체 메트릭 조회", description = "")
+    @Operation(summary = "전체 메트릭 조회", description = DocumentationDescriptions.OPERATION_GET_METRICS)
     @ApiResponses(@ApiResponse(responseCode = "200", description = "성공"))
-    public ResponseEntity<Map<String, Object>> getMetrics() {
+    public ResponseEntity<MetricsResponse> getMetrics() {
         Map<String, Object> metrics = new HashMap<>();
 
         // 캐시 히트율
@@ -69,13 +71,14 @@ public class MetricsController {
         double activeUrls = meterRegistry.find("urls.active.count").gauge().value();
         metrics.put("activeUrlCount", (long) activeUrls);
 
-        return ResponseEntity.ok(metrics);
+        return ResponseEntity.ok(MetricsResponse.from(metrics));
     }
 
     // 상세 메트릭 (지정된 기간의 시계열 데이터)
     @Hidden
     @GetMapping("/timeseries")
-    @Operation(summary = "상세 메트릭 조회 (미구현)", description = "")
+    @Operation(summary = "상세 메트릭 조회 (미구현)", description = DocumentationDescriptions.OPERATION_GET_TIMESERIES_METRICS)
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "성공"))
     public ResponseEntity<Map<String, Object>> getTimeseriesMetrics(
             @RequestParam(defaultValue = "5") int minutes) {
         // 실제 구현에서는 시계열 데이터를 수집하는 로직 추가

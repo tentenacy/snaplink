@@ -1,31 +1,44 @@
 package com.tenacy.snaplink.exception;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.validation.BindingResult;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Data
-@NoArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ErrorResponse {
-    private String message;
+    private String code;
     private int status;
+    private String message;
     private List<FieldError> errors;
 
-    public ErrorResponse(String message, int status) {
-        this.message = message;
-        this.status = status;
+    private ErrorResponse(final BaseErrorCode code) {
+        ErrorReason errorReason = code.getErrorReason();
+        this.code = errorReason.getCode();
+        this.status = errorReason.getStatus();
+        this.message = errorReason.getReason();
+        this.errors = new ArrayList<>();
     }
 
-    private ErrorResponse(String message, int status, List<FieldError> errors) {
-        this.message = message;
-        this.status = status;
+    private ErrorResponse(final BaseErrorCode code, final List<FieldError> errors) {
+        ErrorReason errorReason = code.getErrorReason();
+        this.code = errorReason.getCode();
+        this.status = errorReason.getStatus();
+        this.message = errorReason.getReason();
         this.errors = errors;
     }
 
-    public static ErrorResponse of(String message, int status, BindingResult bindingResult) {
-        return new ErrorResponse(message, status, FieldError.of(bindingResult));
+    public static ErrorResponse of(final BaseErrorCode code, final BindingResult bindingResult) {
+        return new ErrorResponse(code, FieldError.of(bindingResult));
+    }
+
+    public static ErrorResponse of(final BaseErrorCode errorCode) {
+        return new ErrorResponse(errorCode);
     }
 
     @Getter

@@ -2,7 +2,7 @@ package com.tenacy.snaplink.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tenacy.snaplink.api.dto.UrlCreationRequest;
-import com.tenacy.snaplink.api.dto.UrlDto;
+import com.tenacy.snaplink.api.dto.UrlResponse;
 import com.tenacy.snaplink.service.UrlService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class UrlControllerIntegrationTest {
         UrlCreationRequest request = new UrlCreationRequest();
         request.setOriginalUrl("https://example.com");
 
-        UrlDto response = new UrlDto();
+        UrlResponse response = new UrlResponse();
         response.setOriginalUrl("https://example.com");
         response.setShortCode("abc1234");
         response.setShortUrl("https://snap.link/abc1234");
