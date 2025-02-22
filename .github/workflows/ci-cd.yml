@@ -42,7 +42,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_DATABASE: snaplink_test
+          MYSQL_DATABASE: snaplink
           MYSQL_ROOT_PASSWORD: 1234
         ports:
           - 3306:3306
@@ -72,7 +72,7 @@ jobs:
           path: target/
 
       - name: Run Integration Tests
-        run: mvn verify -Dspring.profiles.active=test
+        run: mvn verify -Dspring.profiles.active=test -Dspring.config.import=
         # 이 단계에서 test-data/short-codes.csv 파일이 생성됨
 
       - name: Setup JMeter
