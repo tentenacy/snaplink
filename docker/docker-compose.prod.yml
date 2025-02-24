@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: ${DOCKER_USERNAME}/snaplink:latest
+    image: ${DOCKER_USERNAME}/snaplink:${APP_VERSION}
     container_name: snaplink-app
   # ports:
     # - "80:8080"
