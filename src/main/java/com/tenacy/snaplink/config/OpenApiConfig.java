@@ -17,6 +17,7 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.servers.Server;
 import org.reflections.Reflections;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,7 @@ import java.util.*;
 import static java.util.stream.Collectors.groupingBy;
 
 @Configuration
-public class OpenApiConfiguration implements WebMvcConfigurer {
+public class OpenApiConfig implements WebMvcConfigurer {
 
     @Bean
     public OpenAPI openAPI() {
@@ -40,6 +41,7 @@ public class OpenApiConfiguration implements WebMvcConfigurer {
                 .description("");
         return new OpenAPI()
                 .components(new Components())
+                .addServersItem(new Server().url("/"))
                 .info(info);
     }
 
