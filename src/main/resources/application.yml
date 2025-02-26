@@ -68,3 +68,6 @@ springdoc:
   cache:
     disabled: true  # OpenAPI 문서의 캐싱 비활성화 (기본값: false)
   show-actuator: false  # Spring Actuator 엔드포인트를 Swagger UI에 표시할지 여부 (기본값: false)
+
+app:
+  version: @project.version@

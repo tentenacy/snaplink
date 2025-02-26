@@ -20,6 +20,7 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
 import org.reflections.Reflections;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.HandlerMethod;
@@ -33,11 +34,14 @@ import static java.util.stream.Collectors.groupingBy;
 @Configuration
 public class OpenApiConfig implements WebMvcConfigurer {
 
+    @Value("${app.version}")
+    private String appVersion;
+
     @Bean
     public OpenAPI openAPI() {
         Info info = new Info()
                 .title("스냅링크 API")
-                .version("v0.0.1")
+                .version("v" + appVersion)
                 .description("");
         return new OpenAPI()
                 .components(new Components())
