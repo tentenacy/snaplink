@@ -1,156 +1,325 @@
-# 스냅링크
+# 스냅링크 (SnapLink)
 
-스냅링크는 긴 URL을 7자리 짧은 코드로 변환하고 빠른 리다이렉트를 제공하는 고성능 URL 단축 서비스입니다. Redis 캐싱을 통한 데이터베이스 부하 감소 및 응답 시간 최적화에 중점을 둔 프로젝트로, 읽기:쓰기 비율이 100:1인 워크로드 특성을 활용해 최적의 성능을 구현했습니다.
+스냅링크는 긴 URL을 7자리 짧은 코드로 변환하고 빠른 리다이렉트를 제공하는 고성능 URL 단축 서비스입니다. Redis 캐싱, 데이터베이스 최적화, 비동기 처리를 통해 제한된 리소스 환경(AWS 프리티어)에서도 탁월한 성능을 발휘하도록 설계되었습니다.
 
 ## 목차
 
 1. [프로젝트 핵심 성과](#프로젝트-핵심-성과)
 2. [주요 기능](#주요-기능)
 3. [기술 스택](#기술-스택)
-    - [Backend Framework](#backend-framework)
-    - [데이터베이스 & 캐싱](#데이터베이스--캐싱)
-    - [최적화 기법](#최적화-기법)
-    - [테스팅 & 성능 측정](#테스팅--성능-측정)
-    - [배포 & 인프라](#배포--인프라)
-    - [모니터링 & 로깅](#모니터링--로깅)
 4. [시스템 아키텍처](#시스템-아키텍처)
-    - [앱 아키텍처](#앱-아키텍처)
-    - [인프라 및 배포 아키텍처](#인프라-및-배포-아키텍처)
-5. [성능 최적화 전략](#성능-최적화-전략)
+5. [기술적 도전과 해결 방법](#기술적-도전과-해결-방법)
 6. [성능 테스트 결과](#성능-테스트-결과)
-7. [기술적 도전과 해결 방법](#기술적-도전과-해결-방법)
-8. [API 문서](#api-문서)
+7. [성능 모니터링 지표](#성능-모니터링-지표)
+8. [향후 개선 계획](#향후-개선-계획)
 9. [설치 및 실행 방법](#설치-및-실행-방법)
-10. [성능 모니터링 지표](#성능-모니터링-지표)
-11. [향후 개선 계획](#향후-개선-계획)
-12. [라이선스](#라이선스)
+10. [API 문서](#api-문서)
+11. [라이선스](#라이선스)
 
 ## 프로젝트 핵심 성과
 
 | 메트릭 | 최적화 전 | 최적화 후 | 개선율 |
 | --- | --- | --- | --- |
-| 리다이렉트 응답시간 | 46ms | 4ms | **91.3%** 감소 |
-| TPS (초당 트랜잭션) | 771.9 | 1,003.5 | **30.0%** 증가 |
-| 데이터베이스 부하 | 100% | <10% | **90%+** 감소 |
-| 오류율 | 0.00492% | 0.00130% | **73.6%** 감소 |
+| 리다이렉트 응답시간 | 46ms | 4ms | 91.3% 감소 |
+| TPS (초당 트랜잭션) | 771.9 | 1,003.5 | 30.0% 증가 |
+| 데이터베이스 부하 | 100% | <10% | 90%+ 감소 |
+| 오류율 | 0.00492% | 0.00130% | 73.6% 감소 |
+| 캐시 히트율 | - | 99.94% | - |
 
 ## 주요 기능
 
-- **URL 단축**: 긴 URL을 7자리 짧은 코드로 변환 (Base62 인코딩)
-- **커스텀 코드**: 사용자 지정 단축 코드 지원
-- **유효기간 설정**: URL 만료일 설정 기능
-- **클릭 통계**: 단축 URL 사용 현황 추적 및 분석 (비동기 처리)
-- **고성능 캐싱**: Redis를 활용한 95% 이상의 캐시 히트율 달성
+- URL 단축: 긴 URL을 Base62 인코딩을 사용하여 7자리 코드로 변환
+- 커스텀 코드: 사용자 지정 단축 코드 지원
+- 유효기간 설정: URL 만료일 설정 기능
+- 클릭 통계: 단축 URL 사용 통계 추적 (브라우저별, 국가별, 일별)
+- 실시간 모니터링: Prometheus와 Grafana를 통한 시스템 성능 지표 모니터링
 
 ## 기술 스택
 
 ### Backend Framework
-
-- Java 17 (LTS)
+- Java 17
 - Spring Boot 3.5.4
-- Spring Web (REST API)
-- Spring Data JPA (ORM)
-- Spring Boot Cache, Spring Data Redis (캐싱)
-- Spring Boot Actuator (모니터링)
-- Maven (빌드 도구)
+- Spring Data JPA, Spring Cache
+- Spring Boot Actuator
 
 ### 데이터베이스 & 캐싱
-
-- MySQL 8.0 (영구 저장소)
-- Redis 7.0 (고성능 캐싱)
+- MySQL 8.0 (주 데이터 저장소)
+- Redis 7.0 (캐싱 및 통계 데이터)
 - HikariCP (커넥션 풀 최적화)
-- B-tree 인덱스 (단축 코드 기반 빠른 조회)
 
 ### 최적화 기법
-
-- Custom Base62 Encoder (URL 인코딩, 충돌 최소화)
-- Redis Pipeline (다중 명령어 일괄 처리)
-- Database Prepared Statement (SQL 파싱 오버헤드 제거)
+- 다층 Redis 캐싱 (Spring Cache 추상화)
+- 데이터베이스 인덱스 최적화
+- 비동기 처리 (@Async)
+- Redis Pipeline (명령어 일괄 처리)
 
 ### 테스팅 & 성능 측정
-
-- JUnit 5 & Spring Boot Test (단위/통합 테스트)
-- Testcontainers (MySQL, Redis 테스트 환경)
+- JUnit 5 & Spring Boot Test
+- Testcontainers (통합 테스트)
 - Apache JMeter (부하 테스트)
-- Mockito (Mock 테스트)
 
 ### 배포 & 인프라
-
-- Docker & Docker Compose (컨테이너화)
-- GitHub Actions (CI/CD 파이프라인)
-- AWS EC2 (프리티어 활용)
+- Docker & Docker Compose
+- GitHub Actions (CI/CD)
+- AWS EC2 (t2.micro)
 
 ### 모니터링 & 로깅
-
-- Micrometer (메트릭 수집)
-- Prometheus (시계열 데이터 저장)
-- Grafana (모니터링 대시보드)
-- Logback (구조화된 로깅)
+- Micrometer + Prometheus + Grafana
+- Logback
 
 ## 시스템 아키텍처
 
-### 앱 아키텍처
+### 애플리케이션 아키텍처
 
-스냅링크는 다음과 같은 3계층 아키텍처로 구성되어 있습니다:
+스냅링크는 다음과 같은 계층으로 구성됩니다.
 
-1. **Web Layer**: REST API 컨트롤러, 요청 검증, 예외 처리
-2. **Service Layer**: 비즈니스 로직, 트랜잭션 관리, 캐싱 전략
-3. **Data Layer**: 데이터베이스 접근, 영속성 관리
+1. Web Layer: REST API 컨트롤러, 요청 검증, 예외 처리
+2. Service Layer: 비즈니스 로직, 트랜잭션 관리, 캐싱 전략
+3. Data Layer: 데이터베이스 접근, 영속성 관리
 
-![SnapLink Architecture](/docs/images/app-architecture-diagram.png)
+![애플리케이션 아키텍처](docs/images/app-architecture-diagram.png)
 
-### 인프라 및 배포 아키텍처
+### 인프라 아키텍처
 
-스냅링크 프로젝트는 자동화된 CI/CD 파이프라인과 컨테이너화된 배포 환경을 통해 안정적이고 확장 가능한 인프라를 구축했으며, 다음과 같은 요소로 구성되어 있습니다.
+스냅링크는 자동화된 CI/CD 파이프라인과 컨테이너화된 배포 환경을 통해 안정적이고 확장 가능한 인프라를 구축했으며, 다음과 같은 요소로 구성되어 있습니다.
 
+1. 애플리케이션 서버: Spring Boot 애플리케이션 (Docker 컨테이너)
+2. 데이터베이스: MySQL (영구 저장소)
+3. 캐시 서버: Redis (고성능 인메모리 캐싱)
+4. 모니터링 스택: Prometheus(메트릭 수집), Grafana(대시보드)
+5. CI/CD 파이프라인: GitHub Actions를 통한 자동화된 빌드, 테스트, 배포
 
-1. **애플리케이션 서버**: Spring Boot 애플리케이션 (컨테이너화)
-2. **웹 서버/프록시**: Nginx (HTTPS 종단, 요청 라우팅)
-3. **데이터베이스**: MySQL (영구 데이터 저장)
-4. **캐시 서버**: Redis (고성능 인메모리 캐싱)
-5. **모니터링 스택**: Prometheus(메트릭 수집), Grafana(대시보드)
-6. **인증서 관리**: Certbot (SSL 인증서 자동 갱신)
+![인프라 아키텍처](docs/images/ci-cd-architecture-diagram.png)
 
-![SnapLink Architecture](/docs/images/ci-cd-architecture-diagram.png)
+## 기술적 도전과 해결 방법
 
-이 아키텍처는 AWS 프리티어 환경에서도 효율적으로 운영되도록 설계되었으며, 컨테이너 기반 접근 방식을 통해 확장성과 이식성을 확보했습니다. GitHub Actions와 Docker를 활용한 CI/CD 파이프라인은 코드 변경사항을 신속하게 프로덕션에 반영하면서도 품질을 보장합니다.
+### 1. 대용량 트래픽 처리와 응답 시간 최적화
 
-## 성능 최적화 전략
+도전 과제
+- URL 단축 서비스의 핵심 기능인 리다이렉트 요청 처리 시 46ms의 높은 응답 시간과 데이터베이스 부하 집중 문제 발생
+- 특히 읽기:쓰기 비율이 100:1에 달하는 워크로드 특성을 고려한 최적화 필요
 
-### 1\. Redis 다층 캐싱 전략
+해결 방법: Redis 다층 캐싱 전략
 
-- **접근 패턴 분석**: 읽기:쓰기 비율 100:1 특성 활용
-- **TTL 정책**: 접근 빈도에 따른 동적 TTL 조정
-- **캐시 일관성**: Write-Through 패턴으로 데이터 일관성 보장
-- **캐시 워밍업**: 핫 데이터 사전 로드로 초기 캐시 히트율 향상
+```java
+@Configuration
+@EnableCaching
+public class CacheConfig extends CachingConfigurerSupport {
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory,
+                                     @Qualifier("redisObjectMapper") ObjectMapper mapper) {
+        // 캐시별 설정
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        cacheConfigurations.put("urls", defaultConfig.entryTtl(Duration.ofDays(1)));
+        cacheConfigurations.put("stats", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
-### 2\. 데이터베이스 최적화
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(defaultConfig)
+                .withInitialCacheConfigurations(cacheConfigurations)
+                .build();
+    }
+}
+```
 
-- **인덱스 설계**: 단축 코드 기반 B-tree 인덱스 적용
-- **커넥션 풀 튜닝**: HikariCP 최적 설정으로 연결 관리 효율화
-- **Prepared Statement**: SQL 파싱 오버헤드 제거
+```java
+@Override
+@Cacheable(value = "urls", key = "#shortCode", unless = "#result == null")
+public Url getUrlByShortCode(String shortCode) {
+    return urlRepository.findActiveByShortCode(shortCode)
+            .orElseThrow(() -> UrlNotFoundException.EXCEPTION);
+}
+```
 
-### 3\. 비동기 처리
+주요 구현 전략
+1. Spring Cache 추상화 활용: 비즈니스 로직과 캐싱 로직 분리
+2. 데이터 특성별 TTL 적용: URL(1일), 통계(30분)
+3. 캐시 워밍업: 인기 URL 미리 로드하여 초기 캐시 히트율 향상
+4. Write-Through 패턴: 데이터 변경 시 캐시와 DB 동시 업데이트
+5. Redis Pipeline: 여러 Redis 명령을 단일 네트워크 왕복으로 처리
 
-- **클릭 통계**: 핵심 흐름에 영향 없는 비동기 통계 처리
-- **@Async 어노테이션**: Spring의 비동기 처리 기능 활용
+결과
+- 리다이렉트 응답 시간: 46ms → 4ms (91.3% 감소)
+- 캐시 히트율: 99.94% 달성
+- 데이터베이스 부하: 90% 이상 감소
+
+### 2. 데이터베이스 최적화
+
+도전 과제: 캐시 미스 상황에서 데이터베이스 조회 성능 저하와 동시 접속자 증가 시 커넥션 부족 문제 발생
+
+해결 방법: 인덱스 설계 및 커넥션 풀 튜닝
+
+```java
+@Entity
+@Table(name = "urls", indexes = {
+        @Index(name = "idx_url_short_code_expires", columnList = "shortCode, expiresAt"),
+        @Index(name = "idx_url_expires_at", columnList = "expiresAt"),
+        @Index(name = "idx_url_click_count", columnList = "clickCount")
+})
+public class Url {
+    // 엔티티 필드
+}
+```
+
+```yaml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20              # 동시 연결 수 증가
+      minimum-idle: 5                    # 최소 유지 연결 수
+      idle-timeout: 300000               # 유휴 연결 제거 시간 (5분)
+      max-lifetime: 1800000              # 최대 수명 (30분)
+      connection-timeout: 20000          # 연결 타임아웃 (20초)
+      connection-test-query: SELECT 1    # 연결 유효성 검사 쿼리
+```
+
+주요 구현 전략
+1. 복합 인덱스 설계: 쿼리 패턴 분석 후 최적의 인덱스 구성
+    - `(shortCode, expiresAt)` 인덱스: 유효한 URL 빠른 조회
+    - `expiresAt` 인덱스: 만료된 URL 효율적 관리
+    - `clickCount` 인덱스: 인기 URL 조회 최적화
+2. HikariCP 커넥션 풀 튜닝: AWS 프리티어 환경에 최적화된 설정
+3. 쿼리 최적화: Prepared Statement 활용으로 SQL 파싱 오버헤드 제거
+
+결과
+- 캐시 미스 시 조회 시간: 42.9% 감소
+- 커넥션 부족 문제 해결
+- 데이터베이스 부하 분산
+
+### 3. 핵심 기능과 부가 기능 분리를 통한 성능 향상
+
+도전 과제: URL 리다이렉트 과정에서 클릭 통계, 브라우저/국가별 데이터 수집 등 부가 기능이 응답 시간 지연 문제 야기
+
+해결 방법: Spring의 @Async 활용한 비동기 처리
+
+```java
+@Service
+@RequiredArgsConstructor
+public class ClickTrackingService {
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final UrlService urlService;
+
+    @Async
+    public void trackClick(String shortCode, String userAgent, String ipAddress) {
+        // 기본 클릭 카운트 증가
+        urlService.incrementClickCount(shortCode);
+
+        // 일별 통계
+        String dailyKey = "stats:daily:" + shortCode + ":" + LocalDate.now();
+        redisTemplate.opsForValue().increment(dailyKey, 1);
+        redisTemplate.expire(dailyKey, 30, TimeUnit.DAYS);
+
+        // 브라우저 통계
+        String browser = extractBrowser(userAgent);
+        String browserKey = "stats:browser:" + shortCode;
+        redisTemplate.opsForHash().increment(browserKey, browser, 1);
+        
+        // 국가별 통계
+        String country = getCountryFromIp(ipAddress);
+        String countryKey = "stats:country:" + shortCode;
+        redisTemplate.opsForHash().increment(countryKey, country, 1);
+    }
+}
+```
+
+```java
+@GetMapping("/{shortCode}")
+public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode, HttpServletRequest request) {
+    // 핵심 흐름: URL 조회 및 만료 확인
+    Url url = metricsService.getUrlByShortCode(shortCode);
+    if (url.getExpiresAt() != null && url.getExpiresAt().isBefore(LocalDateTime.now())) {
+        throw UrlExpiredException.EXCEPTION;
+    }
+    
+    // 부가 기능: 클릭 추적을 비동기로 처리
+    clickTrackingService.trackClick(shortCode, request.getHeader("User-Agent"), getClientIp(request));
+
+    // 핵심 흐름: 리다이렉트 응답 반환
+    return ResponseEntity.status(HttpStatus.FOUND)
+            .location(URI.create(url.getOriginalUrl()))
+            .build();
+}
+```
+
+주요 구현 전략
+1. 핵심 흐름과 부가 기능 분리: 사용자 경험에 직접 영향을 주는 기능과 백그라운드 처리 기능 구분
+2. @Async 어노테이션: Spring의 비동기 처리 기능 활용
+3. @EnableAsync: 애플리케이션 메인 클래스에 비동기 기능 활성화
+
+결과
+- 리다이렉트 응답 시간 추가 감소
+- 서버 처리량(TPS) 약 30% 증가
+- AWS 프리티어 환경에서도 안정적인 성능 발휘
+
+### 4. 종합적인 성능 모니터링 체계 구축
+
+도전 과제: 성능 최적화 효과를 정확히 측정하고 시스템 성능을 실시간으로 모니터링할 수 있는 체계 필요
+
+해결 방법: Micrometer + Prometheus + Grafana 통합
+
+```java
+@Configuration
+public class MetricsConfig {
+    // 캐시 히트율 측정
+    @PostConstruct
+    public void setupCacheHitRatioGauge() {
+        Gauge.builder("cache.hit.ratio", this, service -> calculateCacheHitRatio())
+                .description("캐시 히트율")
+                .register(meterRegistry);
+    }
+
+    // URL 리다이렉트 타이머
+    @Bean
+    public Timer urlRedirectTimer(MeterRegistry registry) {
+        return Timer.builder("url.redirect.time")
+                .description("URL 리다이렉트 응답 시간")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .minimumExpectedValue(Duration.ofMillis(1))
+                .maximumExpectedValue(Duration.ofSeconds(2))
+                .register(registry);
+    }
+}
+```
+
+```java
+@Primary
+public class MetricsUrlService implements UrlServiceInterface {
+    // URL 리다이렉트 시간 측정
+    public <T> T recordTime(String timerName, Supplier<T> operation) {
+        return Timer.builder(timerName)
+                .register(meterRegistry)
+                .record(operation);
+    }
+}
+```
+
+주요 구현 전략
+1. 세부 메트릭 수집: 캐시 히트율, 응답 시간, 오류율 등 주요 지표 측정
+2. Prometheus 통합: Spring Actuator를 통한 메트릭 익스포트
+3. Grafana 대시보드: 수집된 데이터의 시각화 및 알림 설정
+4. AOP 활용: 데이터베이스 쿼리 실행 카운트 측정
+
+결과
+- 실시간 시스템 성능 모니터링 가능
+- 성능 병목 지점 식별 및 최적화 방향 설정
+- 사용자 경험 변화 추적
 
 ## 성능 테스트 결과
 
 ### 테스트 환경 및 조건
 
-성능 테스트는 Apache JMeter를 사용하여 다음과 같은 조건에서 수행되었습니다:
+성능 테스트는 Apache JMeter를 사용하여 다음과 같은 조건에서 수행되었습니다.
 
-- **하드웨어**: i7-8700 CPU, 32GB RAM
-- **데이터베이스**: AWS RDS MariaDB
+- 하드웨어: i7-8700 CPU, 32GB RAM
+- 데이터베이스: AWS RDS MariaDB
     - 성능 차이를 현실적으로 측정
-- **테스트 시나리오**:
+- 테스트 시나리오
     - URL 리다이렉트 테스트: 100 스레드, 10초 램프업, 100회 반복 (10,000 요청)
     - URL 생성 테스트: 20 스레드, 5초 램프업, 10회 반복 (200 요청)
     - 통계 조회 테스트: 10 스레드, 2초 램프업, 5회 반복 (50 요청)
     - 메트릭 조회 테스트: 5 스레드, 1초 램프업, 5회 반복 (25 요청)
     - 부하 테스트: 500 스레드, 60초 램프업, 120초 지속 (500 요청)
-- **최적화 단계**:
+- 최적화 단계
     - 단계 1: 기본 구현 (캐싱 X, 튜닝 X)
     - 단계 2: Redis 캐싱 추가 (캐싱 O, 튜닝 X)
     - 단계 3: HikariCP 튜닝 (캐싱 O, 튜닝 O)
@@ -209,80 +378,9 @@
 | 최종 (+ 인덱스 최적화) | 6ms | 587ms | 0.00130% |
 </details>
 
-## 기술적 도전과 해결 방법
-
-### [1. 대용량 트래픽 처리](docs/challenges/001.md)
-
-**문제**: 초당 1,000건 이상의 요청을 5ms 이내에 처리해야 함
-
-**해결**: 다층 캐싱 전략 구현
-
-- Spring Cache 추상화 계층으로 캐싱 로직 분리
-- 읽기:쓰기 비율(100:1)에 최적화된 캐시 설계
-- 인기 URL 자동 캐시 워밍업 구현
-- Redis Pipeline으로 네트워크 왕복 최소화
-
-**결과**: 응답 시간 91.3% 감소 (46ms → 4ms)
-
-### [2. 데이터베이스 성능 최적화](docs/challenges/002.md)
-
-**문제**: 트래픽 증가 시 데이터베이스 부하 집중
-
-**해결**: 인덱스 설계 및 커넥션 풀 튜닝
-
-- shortCode 기반 복합 인덱스 설계
-- HikariCP 최적 설정(최대 풀 크기, 유지 연결 수 등)
-- 핵심 쿼리 최적화 및 Prepared Statement 활용
-
-**결과**: 데이터베이스 부하 90% 이상 감소
-
-### [3. AWS 프리티어 환경에서 최적 성능 달성](docs/challenges/003.md)
-
-**문제**: 제한된 리소스에서 고성능 서비스 운영
-
-**해결**: 비동기 처리 구현
-
-- @Async로 클릭 통계 처리 비동기화
-- 핵심 흐름과 부가 기능 명확히 분리
-- 원자적 연산으로 경쟁 상태 방지
-
-**결과**: AWS 프리티어에서 초당 1,000+ 트랜잭션 처리
-
-## API 문서
-
-API 문서는 Swagger UI를 통해 제공됩니다. [여기](https://snlink.xyz/swagger-ui.html)에서 확인할 수 있습니다.
-
-주요 API 엔드포인트:
-
-| 엔드포인트                | 메서드 | 설명  |
-|----------------------| --- | --- |
-| /{shortCode}         | GET | 단축 URL 리다이렉트 |
-| /api/v1/urls            | POST | URL 단축 생성 |
-| /api/v1/urls/{shortCode} | GET | URL 정보 조회 |
-| /api/v1/urls/{shortCode}/stats | GET | 클릭 통계 조회 |
-| /api/v1/metrics         | GET | 시스템 메트릭 조회 |
-
-## 설치 및 실행 방법
-
-### 로컬 개발 환경
-
-1. 저장소 클론
-
-```
-git clone https://github.com/yourusername/snaplink.git
-cd snaplink
-```
-2. Docker Compose로 애플리케이션 실행
-
-```
-docker-compose -f ./docker/docker-compose.yml up -d
-```
-
 ## 성능 모니터링 지표
 
-위 지표는 Prometheus와 Spring Boot Actuator를 통해 수집되었으며, 전체 시스템의 성능과 안정성을 보여줍니다. 특히 리다이렉트 API는 최적화를 통해 1,000+ TPS의 높은 성능을 달성했으며, 시스템 전체적으로는 350 TPS의 안정적인 처리량을 유지하고 있습니다.
-
-최종 최적화 후 측정된 주요 성능 지표:
+최종 최적화 후 측정된 주요 성능 지표
 
 - 캐시 히트율: 99.94%
 - 평균 응답 시간: 3.66ms
@@ -294,18 +392,49 @@ docker-compose -f ./docker/docker-compose.yml up -d
 - DB 쿼리 수: 43,972
 - 활성 URL 수: 1,386
 
+## API 문서
+
+API 문서는 Swagger UI를 통해 제공됩니다. [여기](https://snlink.xyz/swagger-ui.html)에서 확인할 수 있습니다.
+
+주요 API 엔드포인트는 다음과 같습니다.
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|-----|-----|
+| /{shortCode} | GET | 단축 URL 리다이렉트 |
+| /api/v1/shorten | POST | URL 단축 생성 |
+| /api/v1/urls/{shortCode} | GET | URL 정보 조회 |
+| /api/v1/stats/{shortCode} | GET | 클릭 통계 조회 |
+| /api/v1/metrics | GET | 시스템 메트릭 조회 |
+
+## 설치 및 실행 방법
+
+```bash
+# 저장소 클론
+git clone https://github.com/yourusername/snaplink.git
+cd snaplink
+
+# Docker Compose로 애플리케이션 실행
+docker-compose -f ./docker/docker-compose.yml up -d
+```
+
 ## 향후 개선 계획
 
-1. **수평적 확장성 강화**
+1. 확장성 강화
     - Redis Cluster 도입으로 캐시 확장성 향상
-    - 애플리케이션 서버 로드 밸런싱 구현
-2. **보안 강화**
-    - Rate Limiting 구현으로 DoS 공격 방어
-    - API 키 인증 체계 도입
-3. **기능 확장**
+    - 읽기 전용 DB 복제본 추가를 통한 부하 분산
+
+2. 접근 빈도 기반 동적 TTL 조정
+    - 인기 URL은 캐시 TTL 연장
+    - 저사용 URL은 TTL 단축하여 메모리 효율화
+
+3. 메시지 큐 도입
+    - 비동기 작업의 안정성 강화 (RabbitMQ/Kafka)
+    - 작업 재시도 메커니즘 구현
+
+4. 기능 확장
     - 사용자 계정 시스템 도입
-    - 상세 분석 대시보드 개발
-    - QR 코드 생성 기능 추가
+    - QR 코드 생성 기능
+    - 고급 분석 대시보드
 
 ## 라이선스
 
