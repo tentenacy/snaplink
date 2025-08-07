@@ -193,9 +193,9 @@ jobs:
             EOF
             
             # 운영 환경 배포
-            docker-compose -f docker-compose.prod.yml --env-file .env pull
-            docker-compose -f docker-compose.prod.yml --env-file .env down
-            docker-compose -f docker-compose.prod.yml --env-file .env up -d
+            docker-compose -f docker-compose.yml --env-file .env pull
+            docker-compose -f docker-compose.yml --env-file .env down
+            docker-compose -f docker-compose.yml --env-file .env up -d
             
             # 사용하지 않는 이미지 정리
             docker image prune -af
