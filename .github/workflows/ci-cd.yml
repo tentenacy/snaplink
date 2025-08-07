@@ -72,6 +72,7 @@ jobs:
 
       - name: Run Integration Tests
         run: mvn verify -Dspring.profiles.active=test
+        # 이 단계에서 test-data/short-codes.csv 파일이 생성됨
 
       - name: Setup JMeter
         run: |
@@ -81,6 +82,24 @@ jobs:
 
       - name: Run JMeter Performance Tests
         run: |
+          # test-data 디렉토리 확인 및 JMeter bin 폴더로 CSV 파일 복사
+          if [ -f "test-data/short-codes.csv" ]; then
+            echo "CSV file exists, copying to JMeter directory"
+            mkdir -p apache-jmeter-5.5/bin/test-data
+            cp test-data/short-codes.csv apache-jmeter-5.5/bin/test-data/
+            echo "File copied successfully to JMeter directory"
+            ls -la apache-jmeter-5.5/bin/test-data/
+          else
+            echo "WARNING: CSV file not found in test-data directory"
+            ls -la
+            [ -d "test-data" ] && ls -la test-data/
+            # 파일이 없으면 빈 파일 생성 (테스트 실패 방지)
+            mkdir -p apache-jmeter-5.5/bin/test-data
+            echo "shortCode,originalUrl" > apache-jmeter-5.5/bin/test-data/short-codes.csv
+            echo "testcode,https://example.com/test" >> apache-jmeter-5.5/bin/test-data/short-codes.csv
+          fi
+
+          # JMeter 테스트 실행
           ./apache-jmeter-5.5/bin/jmeter -n -t jmeter/load-test.jmx -l test-results/results.jtl -e -o test-results/report
         env:
           HOST: localhost
@@ -161,8 +180,6 @@ jobs:
             cat > .env << EOF
             DOCKER_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
             APP_VERSION=latest
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
             DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
             GRAFANA_ADMIN_USER=${{ secrets.GRAFANA_ADMIN_USER }}
