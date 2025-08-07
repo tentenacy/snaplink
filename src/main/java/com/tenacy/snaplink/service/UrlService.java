@@ -8,6 +8,7 @@ import com.tenacy.snaplink.exception.DuplicateShortCodeException;
 import com.tenacy.snaplink.exception.UrlNotFoundException;
 import com.tenacy.snaplink.util.Base62Encoder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,21 +18,24 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
+@Qualifier("originalUrlService")
 @Service
 @RequiredArgsConstructor
-public class UrlService {
+public class UrlService implements UrlServiceInterface {
     private final UrlRepository urlRepository;
     private final Base62Encoder encoder;
 
     @Value("${app.shorturl.domain}")
     private String domain;
 
+    @Override
     @Cacheable(value = "urls", key = "#shortCode", unless = "#result == null")
     public Url getUrlByShortCode(String shortCode) {
         return urlRepository.findActiveByShortCode(shortCode)
                 .orElseThrow(() -> new UrlNotFoundException(shortCode));
     }
 
+    @Override
     @Transactional
     public UrlDto createShortUrl(UrlCreationRequest request) {
         // 커스텀 코드 처리
@@ -69,6 +73,7 @@ public class UrlService {
         return UrlDto.from(url, domain);
     }
 
+    @Override
     @Transactional
     @CachePut(value = "urls", key = "#shortCode")
     public Url incrementClickCount(String shortCode) {
