@@ -1,5 +1,6 @@
 package com.tenacy.snaplink.api.dto;
 
+import com.tenacy.snaplink.domain.Url;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,4 +14,16 @@ public class UrlDto {
     private LocalDateTime expiresAt;
     private Long clickCount;
     private boolean custom;
+
+    public static UrlDto from(Url url, String domain) {
+        UrlDto dto = new UrlDto();
+        dto.setOriginalUrl(url.getOriginalUrl());
+        dto.setShortCode(url.getShortCode());
+        dto.setShortUrl(domain + "/" + url.getShortCode());
+        dto.setCreatedAt(url.getCreatedAt());
+        dto.setExpiresAt(url.getExpiresAt());
+        dto.setClickCount(url.getClickCount());
+        dto.setCustom(url.isCustom());
+        return dto;
+    }
 }
