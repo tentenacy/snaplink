@@ -1,8 +1,8 @@
 package com.tenacy.snaplink.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,7 +14,8 @@ public class ClickTrackingService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final UrlService urlService;
 
-    public void trackClick(String shortCode, HttpServletRequest request) {
+    @Async
+    public void trackClick(String shortCode, String userAgent, String ipAddress) {
         // 기본 클릭 카운트 증가
         urlService.incrementClickCount(shortCode);
 
@@ -28,13 +29,13 @@ public class ClickTrackingService {
         redisTemplate.expire(dailyKey, 30, TimeUnit.DAYS);
 
         // 브라우저 통계
-        String browser = extractBrowser(request.getHeader("User-Agent"));
+        String browser = extractBrowser(userAgent);
         String browserKey = "stats:browser:" + shortCode;
         redisTemplate.opsForHash().increment(browserKey, browser, 1);
         redisTemplate.expire(browserKey, 90, TimeUnit.DAYS);
 
         // 국가별 통계 (IP 기반)
-        String country = getCountryFromIp(getClientIp(request));
+        String country = getCountryFromIp(ipAddress);
         String countryKey = "stats:country:" + shortCode;
         redisTemplate.opsForHash().increment(countryKey, country, 1);
         redisTemplate.expire(countryKey, 90, TimeUnit.DAYS);
@@ -55,20 +56,6 @@ public class ClickTrackingService {
         if (userAgent.contains("MSIE") || userAgent.contains("Trident/")) return "IE";
 
         return "other";
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
     }
 
     private String getCountryFromIp(String ip) {
