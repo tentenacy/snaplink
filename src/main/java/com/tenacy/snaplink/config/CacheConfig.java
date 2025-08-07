@@ -1,5 +1,7 @@
 package com.tenacy.snaplink.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
@@ -9,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -23,23 +25,25 @@ import java.util.Map;
 public class CacheConfig extends CachingConfigurerSupport {
 
     @Bean
-    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory,
+                                     @Qualifier("redisObjectMapper") ObjectMapper mapper) {
+        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
+        serializer.setObjectMapper(mapper);
+
         // 기본 캐시 설정
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1))  // 기본 TTL
-                // 캐시 키 생성 전략
+                .entryTtl(Duration.ofHours(1))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                        new StringRedisSerializer())
-                )
-                // 캐시 추출 및 저장 전략
+                        new StringRedisSerializer()
+                        ))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-                        new GenericJackson2JsonRedisSerializer())
-                );
+                        serializer
+                        ));
 
         // 캐시별 설정
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-        cacheConfigurations.put("urls", defaultConfig.entryTtl(Duration.ofDays(1)));  // URLs 캐시는 1일 TTL
-        cacheConfigurations.put("stats", defaultConfig.entryTtl(Duration.ofMinutes(30)));  // 통계 캐시는 30분 TTL
+        cacheConfigurations.put("urls", defaultConfig.entryTtl(Duration.ofDays(1)));
+        cacheConfigurations.put("stats", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
