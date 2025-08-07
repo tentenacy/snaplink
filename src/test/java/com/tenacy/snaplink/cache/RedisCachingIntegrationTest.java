@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Transactional
 @SpringBootTest
 @Testcontainers // Testcontainers 활성화
+@ActiveProfiles("test")
 public class RedisCachingIntegrationTest {
     // 컨테이너 인스턴스를 정의하고 관리하는 필드에 적용
     // GenericContainer -> 모든 Docker 이미지를 실행할 수 있는 범용 컨테이너
