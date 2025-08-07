@@ -2,15 +2,13 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: tenutz/snaplink:latest
     container_name: snaplink-app
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/snaplink?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/snaplink?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=1234
       - SPRING_REDIS_HOST=redis
@@ -31,12 +29,10 @@ services:
     image: mysql:8.0
     container_name: snaplink-mysql
     ports:
-      - "3306:3306"
+      - "13306:3306"
     environment:
       - MYSQL_DATABASE=snaplink
       - MYSQL_ROOT_PASSWORD=1234
-      - MYSQL_USER=snaplink
-      - MYSQL_PASSWORD=snaplink
     volumes:
       - mysql-data:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d
@@ -52,7 +48,7 @@ services:
     image: redis:7.0
     container_name: snaplink-redis
     ports:
-      - "6379:6379"
+      - "16379:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
@@ -63,37 +59,6 @@ services:
       timeout: 5s
       retries: 3
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: snaplink-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    restart: always
-    depends_on:
-      - app
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: snaplink-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-    restart: always
-    depends_on:
-      - prometheus
-
 volumes:
   mysql-data:
   redis-data:
-  prometheus-data:
-  grafana-data:

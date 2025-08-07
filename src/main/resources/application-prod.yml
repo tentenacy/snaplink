@@ -1,0 +1,41 @@
+spring:
+  # JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: none # 운영 환경에서는 수동 마이그레이션 사용
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        # 성능 최적화 설정
+        order_inserts: true
+        order_updates: true
+        jdbc:
+          batch_size: 50
+
+  # Redis 설정
+  redis:
+    timeout: 5000
+
+# 로깅 설정
+logging:
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.yourcompany.snaplink: INFO
+  file:
+    name: /app/logs/snaplink.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB
+
+server:
+  tomcat:
+    max-threads: 400
+    min-spare-threads: 20
+    max-connections: 10000
+    accept-count: 500
+  connection-timeout: 5000

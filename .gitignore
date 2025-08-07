@@ -33,5 +33,3 @@ build/
 .vscode/
 
 ### Configuration ###
-**/application*.yml
-/docker/*.prod.yml
