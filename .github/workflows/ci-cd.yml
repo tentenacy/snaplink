@@ -77,8 +77,8 @@ jobs:
 
       - name: Setup JMeter
         run: |
-          wget https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.5.tgz
-          tar -xzf apache-jmeter-5.5.tgz
+          wget https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf apache-jmeter-5.6.3.tgz
           mkdir -p test-results
 
       - name: Run JMeter Performance Tests
@@ -86,22 +86,22 @@ jobs:
           # test-data 디렉토리 확인 및 JMeter bin 폴더로 CSV 파일 복사
           if [ -f "test-data/short-codes.csv" ]; then
             echo "CSV file exists, copying to JMeter directory"
-            mkdir -p apache-jmeter-5.5/bin/test-data
-            cp test-data/short-codes.csv apache-jmeter-5.5/bin/test-data/
+            mkdir -p apache-jmeter-5.6.3/bin/test-data
+            cp test-data/short-codes.csv apache-jmeter-5.6.3/bin/test-data/
             echo "File copied successfully to JMeter directory"
-            ls -la apache-jmeter-5.5/bin/test-data/
+            ls -la apache-jmeter-5.6.3/bin/test-data/
           else
             echo "WARNING: CSV file not found in test-data directory"
             ls -la
             [ -d "test-data" ] && ls -la test-data/
             # 파일이 없으면 빈 파일 생성 (테스트 실패 방지)
-            mkdir -p apache-jmeter-5.5/bin/test-data
-            echo "shortCode,originalUrl" > apache-jmeter-5.5/bin/test-data/short-codes.csv
-            echo "testcode,https://example.com/test" >> apache-jmeter-5.5/bin/test-data/short-codes.csv
+            mkdir -p apache-jmeter-5.6.3/bin/test-data
+            echo "shortCode,originalUrl" > apache-jmeter-5.6.3/bin/test-data/short-codes.csv
+            echo "testcode,https://example.com/test" >> apache-jmeter-5.6.3/bin/test-data/short-codes.csv
           fi
 
           # JMeter 테스트 실행
-          ./apache-jmeter-5.5/bin/jmeter -n -t jmeter/load-test.jmx -l test-results/results.jtl -e -o test-results/report
+          ./apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/load-test.jmx -l test-results/results.jtl -e -o test-results/report
         env:
           HOST: localhost
           PORT: 8080
