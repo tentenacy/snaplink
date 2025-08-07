@@ -20,8 +20,8 @@ public class CacheRefreshService {
     // 자주 접근되는 URL을 캐시에 미리 로드
     @Scheduled(fixedRate = 3600000) // 1시간마다 실행
     public void preloadHotUrls() {
-        // 가장 많이 클릭된 상위 100개 URL 조회
-        List<Url> hotUrls = urlRepository.findTop100ByOrderByClickCountDesc();
+        // 최소 클릭 수 이상인 상위 URL 조회 (예: 10회 이상 클릭된 URL만)
+        List<Url> hotUrls = urlRepository.findTopUrlsByClickCount(10);
 
         Cache cache = cacheManager.getCache("urls");
         if (cache != null) {

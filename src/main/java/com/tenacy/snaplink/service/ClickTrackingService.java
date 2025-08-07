@@ -18,6 +18,10 @@ public class ClickTrackingService {
         // 기본 클릭 카운트 증가
         urlService.incrementClickCount(shortCode);
 
+        // 총 클릭 카운트 키
+        String clicksKey = "stats:clicks:" + shortCode;
+        redisTemplate.opsForValue().increment(clicksKey, 1);
+
         // 일별 통계
         String dailyKey = "stats:daily:" + shortCode + ":" + LocalDate.now();
         redisTemplate.opsForValue().increment(dailyKey, 1);
@@ -27,22 +31,28 @@ public class ClickTrackingService {
         String browser = extractBrowser(request.getHeader("User-Agent"));
         String browserKey = "stats:browser:" + shortCode;
         redisTemplate.opsForHash().increment(browserKey, browser, 1);
+        redisTemplate.expire(browserKey, 90, TimeUnit.DAYS);
 
         // 국가별 통계 (IP 기반)
         String country = getCountryFromIp(getClientIp(request));
         String countryKey = "stats:country:" + shortCode;
         redisTemplate.opsForHash().increment(countryKey, country, 1);
+        redisTemplate.expire(countryKey, 90, TimeUnit.DAYS);
     }
 
     private String extractBrowser(String userAgent) {
         // User-Agent 파싱 로직
         if (userAgent == null) return "unknown";
 
-        if (userAgent.contains("Firefox")) return "Firefox";
-        if (userAgent.contains("Chrome")) return "Chrome";
-        if (userAgent.contains("Safari")) return "Safari";
-        if (userAgent.contains("MSIE") || userAgent.contains("Trident")) return "IE";
-        if (userAgent.contains("Opera") || userAgent.contains("OPR")) return "Opera";
+        // 가장 구체적인 브라우저부터 확인 (순서 중요)
+        if (userAgent.contains("Edg/") || userAgent.contains("Edge/")) return "Edge";
+        if (userAgent.contains("OPR/") || userAgent.contains("Opera/")) return "Opera";
+        if (userAgent.contains("Firefox/")) return "Firefox";
+        // Chrome 확인은 Safari 이전에 해야 함 (Safari에도 Chrome이 포함됨)
+        if (userAgent.contains("Chrome/")) return "Chrome";
+        // Safari는 Chrome 체크 이후에 해야 함
+        if (userAgent.contains("Safari/")) return "Safari";
+        if (userAgent.contains("MSIE") || userAgent.contains("Trident/")) return "IE";
 
         return "other";
     }
