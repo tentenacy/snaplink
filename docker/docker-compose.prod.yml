@@ -4,9 +4,9 @@ services:
   app:
     image: ${DOCKER_USERNAME}/snaplink:latest
     container_name: snaplink-app
-    ports:
-      - "80:8080"
-      - "443:8443"
+  # ports:
+    # - "80:8080"
+    # - "443:8443"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/snaplink?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
@@ -19,7 +19,7 @@ services:
       - SPRING_JPA_DATABASE-PLATFORM=org.hibernate.dialect.MySQL8Dialect
       - SPRING_JPA_DATABASE=mysql
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - APP_SHORTURL_DOMAIN=http://${DOMAIN_NAME}
+      - APP_SHORTURL_DOMAIN=https://${DOMAIN_NAME}
       - JAVA_OPTS=-Xms512m -Xmx1024m -XX:MaxMetaspaceSize=256m -XX:CompressedClassSpaceSize=128m -Xss512k -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:G1ReservePercent=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+UseStringDeduplication -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump.hprof -Djava.security.egd=file:/dev/./urandom -XX:+ExitOnOutOfMemoryError
     depends_on:
       - db
@@ -29,10 +29,10 @@ services:
       resources:
         limits:
           cpus: '0.4'
-          memory: 450M
+          memory: 1200M
         reservations:
           cpus: '0.2'
-          memory: 350M
+          memory: 800M
     volumes:
       - app-logs:/app/logs
     healthcheck:
@@ -152,6 +152,42 @@ services:
         limits:
           cpus: '0.05'
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  certbot:
+    image: certbot/certbot
+    container_name: snaplink-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - snaplink-network
+
+  nginx:
+    image: nginx:latest
+    container_name: snaplink-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/www:/var/www/html
+      - ./certbot/www:/var/www/certbot:ro
+      - ./certbot/conf:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    restart: always
+    networks:
+      - snaplink-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: 64M
     logging:
       driver: "json-file"
       options:
