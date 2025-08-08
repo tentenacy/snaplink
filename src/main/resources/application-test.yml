@@ -1,10 +1,10 @@
 spring:
   # 데이터베이스 설정
   datasource:
-    url: jdbc:mysql://localhost:3306/snaplink_test?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-    username: root
-    password: 1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mariadb:://${db.host:localhost}:${db.port:3306}/snaplink?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: ${db.username:root}
+    password: ${db.password:1234}
+    driver-class-name: org.mariadb.jdbc.Driver
 
   # JPA 설정
   jpa:
@@ -26,10 +26,11 @@ logging:
   level:
     root: INFO
     org.springframework: WARN
+    org.springframework.cache: TRACE
     org.hibernate: WARN
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: INFO
-    com.yourcompany.snaplink: DEBUG
+    com.tenacy.snaplink: DEBUG
 
 # 애플리케이션 설정
 app:

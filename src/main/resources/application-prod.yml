@@ -23,7 +23,7 @@ logging:
     root: WARN
     org.springframework: WARN
     org.hibernate: WARN
-    com.yourcompany.snaplink: INFO
+    com.tenacy.snaplink: INFO
   file:
     name: /app/logs/snaplink.log
   logback:

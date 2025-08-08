@@ -1,19 +1,21 @@
 spring:
   profiles:
-    active: dev
+    active: test
+  config:
+    additional-location: file:./config/
   datasource:
     hikari:
-      # HikariCP ??? ? ?? ?
+      # HikariCP 커넥션 풀 튜닝 전
       maximum-pool-size: 10
       connection-timeout: 30000
-      # HikariCP ??? ? ?? ?
-#      maximum-pool-size: 20              # ?? ?? ? ??
-#      minimum-idle: 5                    # ?? ?? ?? ?
-#      idle-timeout: 300000               # ?? ?? ?? ?? (5?)
-#      max-lifetime: 1800000              # ?? ?? (30?)
-#      connection-timeout: 20000          # ?? ???? (20?)
-#      connection-test-query: SELECT 1    # ?? ??? ?? ??
-#      pool-name: SnapLinkHikariPool      # ??? ? ?? (?????)
+      # HikariCP 커넥션 풀 튜닝 후
+#      maximum-pool-size: 20              # 동시 연결 수 증가
+#      minimum-idle: 5                    # 최소 유지 연결 수
+#      idle-timeout: 300000               # 유휴 연결 제거 시간 (5분)
+#      max-lifetime: 1800000              # 최대 수명 (30분)
+#      connection-timeout: 20000          # 연결 타임아웃 (20초)
+#      connection-test-query: SELECT 1    # 연결 유효성 검사 쿼리
+#      pool-name: SnapLinkHikariPool      # 커넥션 풀 이름 (모니터링용)
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false

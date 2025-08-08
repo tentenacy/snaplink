@@ -33,3 +33,4 @@ build/
 .vscode/
 
 ### Configuration ###
+/config/application-secrets.yml
