@@ -1,14 +1,18 @@
 package com.tenacy.snaplink.exception;
 
+import com.tenacy.snaplink.api.controller.MetricsController;
+import com.tenacy.snaplink.api.controller.StatisticsController;
+import com.tenacy.snaplink.api.controller.UrlController;
 import io.micrometer.core.instrument.Counter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+@RestControllerAdvice(annotations = {RestController.class}, basePackageClasses = {UrlController.class, StatisticsController.class, MetricsController.class})
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
     private final Counter errorCounter;
