@@ -2,7 +2,8 @@ spring:
   profiles:
     active: test
   config:
-    additional-location: file:./config/
+    import:
+      - optional:file:config/application-secrets.yml
   datasource:
     hikari:
       # HikariCP 커넥션 풀 튜닝 전
