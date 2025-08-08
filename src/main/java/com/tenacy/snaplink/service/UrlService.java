@@ -1,7 +1,7 @@
 package com.tenacy.snaplink.service;
 
 import com.tenacy.snaplink.api.dto.UrlCreationRequest;
-import com.tenacy.snaplink.api.dto.UrlDto;
+import com.tenacy.snaplink.api.dto.UrlResponse;
 import com.tenacy.snaplink.domain.Url;
 import com.tenacy.snaplink.domain.UrlRepository;
 import com.tenacy.snaplink.exception.DuplicateShortCodeException;
@@ -32,18 +32,18 @@ public class UrlService implements UrlServiceInterface {
     @Cacheable(value = "urls", key = "#shortCode", unless = "#result == null")
     public Url getUrlByShortCode(String shortCode) {
         return urlRepository.findActiveByShortCode(shortCode)
-                .orElseThrow(() -> new UrlNotFoundException(shortCode));
+                .orElseThrow(() -> UrlNotFoundException.EXCEPTION);
     }
 
     @Override
     @Transactional
-    public UrlDto createShortUrl(UrlCreationRequest request) {
+    public UrlResponse createShortUrl(UrlCreationRequest request) {
         // 커스텀 코드 처리
         String shortCode;
         if (StringUtils.hasText(request.getCustomCode())) {
             shortCode = request.getCustomCode();
             if (urlRepository.existsByShortCode(shortCode)) {
-                throw new DuplicateShortCodeException(shortCode);
+                throw DuplicateShortCodeException.EXCEPTION;
             }
         } else {
             // 자동 생성된 코드가 중복되지 않을 때까지 반복
@@ -70,7 +70,7 @@ public class UrlService implements UrlServiceInterface {
         urlRepository.save(url);
 
         // 응답 DTO 변환
-        return UrlDto.from(url, domain);
+        return UrlResponse.from(url, domain);
     }
 
     @Override

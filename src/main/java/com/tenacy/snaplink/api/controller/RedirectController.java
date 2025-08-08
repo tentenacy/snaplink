@@ -5,6 +5,8 @@ import com.tenacy.snaplink.exception.UrlExpiredException;
 import com.tenacy.snaplink.service.ClickTrackingService;
 import com.tenacy.snaplink.service.MetricsUrlService;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,8 @@ public class RedirectController {
 
     @Hidden
     @GetMapping("/{shortCode}")
+    @ApiResponses(@ApiResponse(responseCode = "302", description = "성공"))
+//    @ApiErrorCodeExample({CommonErrorCode._URL_NOT_FOUND, CommonErrorCode._URL_EXPIRED})
     public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode, HttpServletRequest request) {
         // 타이머로 전체 요청 시간 측정
         return metricsService.recordTime("url.redirect.time", () -> {
@@ -31,7 +35,7 @@ public class RedirectController {
 
             // 만료 검사
             if (url.getExpiresAt() != null && url.getExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new UrlExpiredException(shortCode);
+                throw UrlExpiredException.EXCEPTION;
             }
 
             // 클릭 추적을 비동기로 처리

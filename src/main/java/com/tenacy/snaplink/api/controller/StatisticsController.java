@@ -1,9 +1,13 @@
 package com.tenacy.snaplink.api.controller;
 
-import com.tenacy.snaplink.api.dto.UrlDto;
+import com.tenacy.snaplink.api.dto.UrlResponse;
+import com.tenacy.snaplink.api.dto.UrlStatsResponse;
+import com.tenacy.snaplink.doc.ApiErrorCodeExample;
 import com.tenacy.snaplink.domain.Url;
+import com.tenacy.snaplink.exception.CommonErrorCode;
 import com.tenacy.snaplink.service.StatisticsService;
 import com.tenacy.snaplink.service.UrlService;
+import com.tenacy.snaplink.util.DocumentationDescriptions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,13 +21,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/v1/stats")
 @RequiredArgsConstructor
-@Tag(name = "2. 통계 API", description = "")
+@Tag(name = "2. 통계 API", description = DocumentationDescriptions.TAG_STATISTICS_API)
 public class StatisticsController {
     private final UrlService urlService;
     private final StatisticsService statisticsService;
@@ -32,30 +33,27 @@ public class StatisticsController {
     private String domain;
 
     @GetMapping("/{shortCode}")
-    @Operation(summary = "URL 통계", description = "")
+    @Operation(summary = "URL 통계", description = DocumentationDescriptions.OPERATION_GET_URL_STATS)
     @ApiResponses(@ApiResponse(responseCode = "200", description = "성공"))
-    public ResponseEntity<Map<String, Object>> getUrlStats(
-            @Parameter(description = "단축 URL 맨 끝에 있는 7자리 코드입니다.")
+    @ApiErrorCodeExample(CommonErrorCode._URL_NOT_FOUND)
+    public ResponseEntity<UrlStatsResponse> getUrlStats(
+            @Parameter(description = DocumentationDescriptions.PARAM_SHORT_CODE)
             @PathVariable String shortCode
     ) {
-        Map<String, Object> stats = new HashMap<>();
 
-        // 기본 정보
         Url url = urlService.getUrlByShortCode(shortCode);
-        stats.put("url", UrlDto.from(url, domain));
 
-        // 클릭 통계
-        stats.put("clicks", statisticsService.getAllStats(shortCode));
-
-        // 일별 트렌드 (최근 7일)
-        stats.put("dailyTrend", statisticsService.getDailyTrend(shortCode, 7));
-
-        // 브라우저별 통계
-        stats.put("browsers", statisticsService.getBrowserStats(shortCode));
-
-        // 국가별 통계
-        stats.put("countries", statisticsService.getCountryStats(shortCode));
-
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(UrlStatsResponse.from(
+                // 기본 정보
+                UrlResponse.from(url, domain),
+                // 클릭 통계
+                statisticsService.getAllStats(shortCode),
+                // 일별 트렌드 (최근 7일)
+                statisticsService.getDailyTrend(shortCode, 7),
+                // 브라우저별 통계
+                statisticsService.getBrowserStats(shortCode),
+                // 국가별 통계
+                statisticsService.getCountryStats(shortCode)
+        ));
     }
 }

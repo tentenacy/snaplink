@@ -1,7 +1,7 @@
 package com.tenacy.snaplink.service;
 
 import com.tenacy.snaplink.api.dto.UrlCreationRequest;
-import com.tenacy.snaplink.api.dto.UrlDto;
+import com.tenacy.snaplink.api.dto.UrlResponse;
 import com.tenacy.snaplink.domain.Url;
 import com.tenacy.snaplink.domain.UrlRepository;
 import com.tenacy.snaplink.exception.UrlNotFoundException;
@@ -59,7 +59,7 @@ public class UrlServiceTest {
         when(urlRepository.save(any(Url.class))).thenAnswer(i -> i.getArgument(0));
 
         // when
-        UrlDto result = urlService.createShortUrl(request);
+        UrlResponse result = urlService.createShortUrl(request);
 
         // then
         assertNotNull(result);
