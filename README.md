@@ -1,4 +1,4 @@
-# 스냅링크 (SnapLink)
+# 스냅링크
 
 스냅링크는 긴 URL을 7자리 짧은 코드로 변환하고 빠른 리다이렉트를 제공하는 고성능 URL 단축 서비스입니다. Redis 캐싱, 데이터베이스 최적화, 비동기 처리를 통해 제한된 리소스 환경(AWS 프리티어)에서도 탁월한 성능을 발휘하도록 설계되었습니다.
 
@@ -9,11 +9,11 @@
 3. [기술 스택](#기술-스택)
 4. [시스템 아키텍처](#시스템-아키텍처)
 5. [기술적 도전과 해결 방법](#기술적-도전과-해결-방법)
-6. [성능 테스트 결과](#성능-테스트-결과)
+6. [성능 테스트 및 분석](#성능-테스트-및-분석)
 7. [성능 모니터링 지표](#성능-모니터링-지표)
-8. [향후 개선 계획](#향후-개선-계획)
-9. [설치 및 실행 방법](#설치-및-실행-방법)
-10. [API 문서](#api-문서)
+8. [설치 및 실행 방법](#설치-및-실행-방법)
+9. [API 문서](#api-문서)
+10. [향후 개선 계획](#향후-개선-계획)
 11. [라이선스](#라이선스)
 
 ## 프로젝트 핵심 성과
@@ -304,7 +304,7 @@ public class MetricsUrlService implements UrlServiceInterface {
 - 성능 병목 지점 식별 및 최적화 방향 설정
 - 사용자 경험 변화 추적
 
-## 성능 테스트 결과
+## 성능 테스트 및 분석
 
 ### 테스트 환경 및 조건
 
@@ -392,6 +392,17 @@ public class MetricsUrlService implements UrlServiceInterface {
 - DB 쿼리 수: 43,972
 - 활성 URL 수: 1,386
 
+## 설치 및 실행 방법
+
+```bash
+# 저장소 클론
+git clone https://github.com/tentenacy/snaplink.git
+cd snaplink
+
+# Docker Compose로 애플리케이션 실행
+docker-compose -f ./docker/docker-compose.yml up -d
+```
+
 ## API 문서
 
 API 문서는 Swagger UI를 통해 제공됩니다. [여기](https://snlink.xyz/swagger-ui.html)에서 확인할 수 있습니다.
@@ -405,17 +416,6 @@ API 문서는 Swagger UI를 통해 제공됩니다. [여기](https://snlink.xyz/
 | /api/v1/urls/{shortCode} | GET | URL 정보 조회 |
 | /api/v1/stats/{shortCode} | GET | 클릭 통계 조회 |
 | /api/v1/metrics | GET | 시스템 메트릭 조회 |
-
-## 설치 및 실행 방법
-
-```bash
-# 저장소 클론
-git clone https://github.com/yourusername/snaplink.git
-cd snaplink
-
-# Docker Compose로 애플리케이션 실행
-docker-compose -f ./docker/docker-compose.yml up -d
-```
 
 ## 향후 개선 계획
 
