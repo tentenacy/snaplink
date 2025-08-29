@@ -406,6 +406,12 @@ docker-compose -f ./docker/docker-compose.yml up -d
 
 ## API 문서
 
+API 문서는 애플리케이션 실행 후 다음 링크에서 확인하실 수 있습니다.
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
 ### 주요 API 엔드포인트
 
 | 엔드포인트 | 메서드 | 설명 |

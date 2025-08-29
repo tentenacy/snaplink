@@ -77,12 +77,11 @@ public class MetricsController {
     // 상세 메트릭 (지정된 기간의 시계열 데이터)
     @Hidden
     @GetMapping("/timeseries")
-    @Operation(summary = "상세 메트릭 조회 (미구현)", description = DocumentationDescriptions.OPERATION_GET_TIMESERIES_METRICS)
+    @Operation(summary = "상세 메트릭 조회", description = DocumentationDescriptions.OPERATION_GET_TIMESERIES_METRICS)
     @ApiResponses(@ApiResponse(responseCode = "200", description = "성공"))
     public ResponseEntity<Map<String, Object>> getTimeseriesMetrics(
             @RequestParam(defaultValue = "5") int minutes) {
-        // 실제 구현에서는 시계열 데이터를 수집하는 로직 추가
-        // 이 예제에서는 간단하게 현재 값만 반환
+        // 시계열 데이터를 수집하는 로직 추가 예정
 
         Map<String, Object> timeseriesData = new HashMap<>();
         // ... 시계열 데이터 수집 로직
