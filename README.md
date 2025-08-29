@@ -1,4 +1,4 @@
-# 스냅링크 (SnapLink)
+# 스냅링크
 
 스냅링크는 긴 URL을 7자리 짧은 코드로 변환하고 빠른 리다이렉트를 제공하는 고성능 URL 단축 서비스입니다. Redis 캐싱, 데이터베이스 최적화, 비동기 처리를 통해 제한된 리소스 환경(AWS 프리티어)에서도 탁월한 성능을 발휘하도록 설계되었습니다.
 
@@ -9,22 +9,22 @@
 3. [기술 스택](#기술-스택)
 4. [시스템 아키텍처](#시스템-아키텍처)
 5. [기술적 도전과 해결 방법](#기술적-도전과-해결-방법)
-6. [성능 테스트 결과](#성능-테스트-결과)
+6. [성능 테스트 및 분석](#성능-테스트-및-분석)
 7. [성능 모니터링 지표](#성능-모니터링-지표)
-8. [향후 개선 계획](#향후-개선-계획)
-9. [설치 및 실행 방법](#설치-및-실행-방법)
-10. [API 문서](#api-문서)
+8. [설치 및 실행 방법](#설치-및-실행-방법)
+9. [API 문서](#api-문서)
+10. [향후 개선 계획](#향후-개선-계획)
 11. [라이선스](#라이선스)
 
 ## 프로젝트 핵심 성과
 
-| 메트릭 | 최적화 전 | 최적화 후 | 개선율 |
-| --- | --- | --- | --- |
-| 리다이렉트 응답시간 | 46ms | 4ms | 91.3% 감소 |
-| TPS (초당 트랜잭션) | 771.9 | 1,003.5 | 30.0% 증가 |
-| 데이터베이스 부하 | 100% | <10% | 90%+ 감소 |
-| 오류율 | 0.00492% | 0.00130% | 73.6% 감소 |
-| 캐시 히트율 | - | 99.94% | - |
+| 메트릭 | 최적화 전 | 최적화 후 | 개선율 | 비고 |
+| --- | --- | --- | --- | --- |
+| 리다이렉트 응답시간 | 46ms | 4ms | 91.3% 감소 | |
+| TPS (초당 트랜잭션) | 771.9 | 1,003.5 | 30.0% 증가 | 리다이렉트 한정 |
+| 데이터베이스 부하 | 100% | <10% | 90%+ 감소 | |
+| 오류율 | 0.00492% | 0.00130% | 73.6% 감소 | |
+| 캐시 히트율 | - | 99.94% | - | |
 
 ## 주요 기능
 
@@ -32,7 +32,7 @@
 - 커스텀 코드: 사용자 지정 단축 코드 지원
 - 유효기간 설정: URL 만료일 설정 기능
 - 클릭 통계: 단축 URL 사용 통계 추적 (브라우저별, 국가별, 일별)
-- 실시간 모니터링: Prometheus와 Grafana를 통한 시스템 성능 지표 모니터링
+- 성능 모니터링: Micrometer를 통한 메트릭 수집 및 API를 통한 성능 지표 조회
 
 ## 기술 스택
 
@@ -64,7 +64,8 @@
 - AWS EC2 (t2.micro)
 
 ### 모니터링 & 로깅
-- Micrometer + Prometheus + Grafana
+- Micrometer (메트릭 수집)
+- Spring Boot Actuator
 - Logback
 
 ## 시스템 아키텍처
@@ -86,7 +87,7 @@
 1. 애플리케이션 서버: Spring Boot 애플리케이션 (Docker 컨테이너)
 2. 데이터베이스: MySQL (영구 저장소)
 3. 캐시 서버: Redis (고성능 인메모리 캐싱)
-4. 모니터링 스택: Prometheus(메트릭 수집), Grafana(대시보드)
+4. 모니터링: Micrometer를 통한 메트릭 수집 및 API 엔드포인트 제공
 5. CI/CD 파이프라인: GitHub Actions를 통한 자동화된 빌드, 테스트, 배포
 
 ![인프라 아키텍처](docs/images/ci-cd-architecture-diagram.png)
@@ -254,7 +255,7 @@ public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable String shortCode
 
 도전 과제: 성능 최적화 효과를 정확히 측정하고 시스템 성능을 실시간으로 모니터링할 수 있는 체계 필요
 
-해결 방법: Micrometer + Prometheus + Grafana 통합
+해결 방법: Micrometer를 통한 종합적인 메트릭 수집
 
 ```java
 @Configuration
@@ -295,8 +296,8 @@ public class MetricsUrlService implements UrlServiceInterface {
 
 주요 구현 전략
 1. 세부 메트릭 수집: 캐시 히트율, 응답 시간, 오류율 등 주요 지표 측정
-2. Prometheus 통합: Spring Actuator를 통한 메트릭 익스포트
-3. Grafana 대시보드: 수집된 데이터의 시각화 및 알림 설정
+2. Spring Boot Actuator: 헬스체크 및 메트릭 엔드포인트 제공
+3. API를 통한 메트릭 조회: `/api/v1/metrics` 엔드포인트를 통한 실시간 성능 지표 확인
 4. AOP 활용: 데이터베이스 쿼리 실행 카운트 측정
 
 결과
@@ -304,15 +305,15 @@ public class MetricsUrlService implements UrlServiceInterface {
 - 성능 병목 지점 식별 및 최적화 방향 설정
 - 사용자 경험 변화 추적
 
-## 성능 테스트 결과
+## 성능 테스트 및 분석
 
 ### 테스트 환경 및 조건
 
 성능 테스트는 Apache JMeter를 사용하여 다음과 같은 조건에서 수행되었습니다.
 
 - 하드웨어: i7-8700 CPU, 32GB RAM
-- 데이터베이스: AWS RDS MariaDB
-    - 성능 차이를 현실적으로 측정
+- 데이터베이스: AWS RDS MariaDB (프리티어 환경)
+    - 본 서비스는 MySQL 8.0 사용, 테스트는 비용 절약을 위해 MariaDB 활용
 - 테스트 시나리오
     - URL 리다이렉트 테스트: 100 스레드, 10초 램프업, 100회 반복 (10,000 요청)
     - URL 생성 테스트: 20 스레드, 5초 램프업, 10회 반복 (200 요청)
@@ -332,7 +333,7 @@ public class MetricsUrlService implements UrlServiceInterface {
 | 캐싱 X, 튜닝 X | 46ms | 336ms | 771.9 | 0% |
 | 캐싱 O, 튜닝 X | 8ms | 397ms | 1001.9 | 0% |
 | 캐싱 O, 튜닝 O | 7ms | 383ms | 1001.0 | 0% |
-| 최종 (+ 인덱스 최적화) | 4ms | 407ms | 1003.5 | 0% |
+| 최종 | 4ms | 407ms | 1003.5 | 0% |
 
 <details>
 <summary>각 API 엔드포인트별 성능 테스트 결과</summary>
@@ -343,7 +344,7 @@ public class MetricsUrlService implements UrlServiceInterface {
 | 캐싱 X, 튜닝 X | 79ms | 552ms | 0.03% |
 | 캐싱 O, 튜닝 X | 70ms | 754ms | 0.045% |
 | 캐싱 O, 튜닝 O | 70ms | 597ms | 0.06% |
-| 최종 (+ 인덱스 최적화) | 57ms | 587ms | 0.04% |
+| 최종 | 57ms | 587ms | 0.04% |
 
 #### URL 통계 조회 API
 | 최적화 단계 | 평균 응답시간 | 최대 응답시간 | 오류율 |
@@ -351,7 +352,7 @@ public class MetricsUrlService implements UrlServiceInterface {
 | 캐싱 X, 튜닝 X | 69ms | 543ms | 0% |
 | 캐싱 O, 튜닝 X | 83ms | 639ms | 0% |
 | 캐싱 O, 튜닝 O | 76ms | 546ms | 0% |
-| 최종 (+ 인덱스 최적화) | 64ms | 537ms | 0% |
+| 최종 | 64ms | 537ms | 0% |
 
 #### 메트릭 조회 API
 | 최적화 단계 | 평균 응답시간 | 최대 응답시간 | 오류율 |
@@ -359,7 +360,7 @@ public class MetricsUrlService implements UrlServiceInterface {
 | 캐싱 X, 튜닝 X | 49ms | 320ms | 0% |
 | 캐싱 O, 튜닝 X | 60ms | 391ms | 0% |
 | 캐싱 O, 튜닝 O | 59ms | 351ms | 0% |
-| 최종 (+ 인덱스 최적화) | 63ms | 307ms | 0% |
+| 최종 | 63ms | 307ms | 0% |
 
 #### 리다이렉트 부하 테스트
 | 최적화 단계 | 평균 응답시간 | 최대 응답시간 | 오류율 |
@@ -367,7 +368,7 @@ public class MetricsUrlService implements UrlServiceInterface {
 | 캐싱 X, 튜닝 X | 17ms | 329ms | 0.094% |
 | 캐싱 O, 튜닝 X | 5ms | 381ms | 0.028% |
 | 캐싱 O, 튜닝 O | 5ms | 389ms | 0.02% |
-| 최종 (+ 인덱스 최적화) | 4ms | 393ms | 0.012% |
+| 최종 | 4ms | 393ms | 0.012% |
 
 #### 전체 테스트 결과 (모든 API 엔드포인트)
 | 최적화 단계 | 평균 응답시간 | 최대 응답시간 | 오류율 |
@@ -375,12 +376,12 @@ public class MetricsUrlService implements UrlServiceInterface {
 | 캐싱 X, 튜닝 X | 46ms | 552ms | 0.00492% |
 | 캐싱 O, 튜닝 X | 10ms | 754ms | 0.00213% |
 | 캐싱 O, 튜닝 O | 8ms | 597ms | 0.00204% |
-| 최종 (+ 인덱스 최적화) | 6ms | 587ms | 0.00130% |
+| 최종 | 6ms | 587ms | 0.00130% |
 </details>
 
 ## 성능 모니터링 지표
 
-최종 최적화 후 측정된 주요 성능 지표
+최종적으로 측정된 주요 성능 지표는 다음과 같습니다.
 
 - 캐시 히트율: 99.94%
 - 평균 응답 시간: 3.66ms
@@ -388,15 +389,24 @@ public class MetricsUrlService implements UrlServiceInterface {
 - 99% 응답 시간: 1.11ms
 - TPS (초당 트랜잭션 수): 350
 - 총 요청 수: 21,000
-- 에러율: 0.1333%
+- 에러율: 0.00130%
 - DB 쿼리 수: 43,972
 - 활성 URL 수: 1,386
 
+## 설치 및 실행 방법
+
+```bash
+# 저장소 클론
+git clone https://github.com/tentenacy/snaplink.git
+cd snaplink
+
+# Docker Compose로 애플리케이션 실행
+docker-compose -f ./docker/docker-compose.yml up -d
+```
+
 ## API 문서
 
-API 문서는 Swagger UI를 통해 제공됩니다. [여기](https://snlink.xyz/swagger-ui.html)에서 확인할 수 있습니다.
-
-주요 API 엔드포인트는 다음과 같습니다.
+### 주요 API 엔드포인트
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|-----|-----|
@@ -405,17 +415,6 @@ API 문서는 Swagger UI를 통해 제공됩니다. [여기](https://snlink.xyz/
 | /api/v1/urls/{shortCode} | GET | URL 정보 조회 |
 | /api/v1/stats/{shortCode} | GET | 클릭 통계 조회 |
 | /api/v1/metrics | GET | 시스템 메트릭 조회 |
-
-## 설치 및 실행 방법
-
-```bash
-# 저장소 클론
-git clone https://github.com/yourusername/snaplink.git
-cd snaplink
-
-# Docker Compose로 애플리케이션 실행
-docker-compose -f ./docker/docker-compose.yml up -d
-```
 
 ## 향후 개선 계획
 
@@ -433,13 +432,8 @@ docker-compose -f ./docker/docker-compose.yml up -d
 
 4. 기능 확장
     - 사용자 계정 시스템 도입
-    - QR 코드 생성 기능
     - 고급 분석 대시보드
 
 ## 라이선스
 
 MIT License
-
-* * *
-
-© 2025 SnapLink URL Shortening Service
