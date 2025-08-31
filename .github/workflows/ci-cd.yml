@@ -155,47 +155,47 @@ jobs:
             type=sha,format=short
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker_meta.outputs.tags }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/snaplink:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/snaplink:buildcache,mode=max
 
-  # deploy:
-  #   needs: docker
-  #   if: github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
+  deploy:
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Deploy to AWS EC2
-  #       uses: appleboy/ssh-action@master
-  #       with:
-  #         host: ${{ secrets.EC2_HOST }}
-  #         username: ${{ secrets.EC2_USER }}
-  #         key: ${{ secrets.EC2_SSH_KEY }}
-  #         script: |
-  #           cd ~/snaplink
-  #           docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/snaplink
+            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
             
-  #           # 환경변수 파일 생성 또는 업데이트
-  #           cat > .env << EOF
-  #           DOCKER_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
-  #           APP_VERSION=latest
-  #           DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
-  #           DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
-  #           GRAFANA_ADMIN_USER=${{ secrets.GRAFANA_ADMIN_USER }}
-  #           GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-  #           EOF
+            # 환경변수 파일 생성 또는 업데이트
+            cat > .env << EOF
+            DOCKER_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
+            APP_VERSION=latest
+            DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+            DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
+            GRAFANA_ADMIN_USER=${{ secrets.GRAFANA_ADMIN_USER }}
+            GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+            EOF
             
-  #           # 운영 환경 배포
-  #           docker-compose -f docker-compose.yml --env-file .env pull
-  #           docker-compose -f docker-compose.yml --env-file .env down
-  #           docker-compose -f docker-compose.yml --env-file .env up -d
+            # 프로덕션 환경 배포 (docker-compose.prod.yml 사용)
+            docker-compose -f docker/docker-compose.prod.yml --env-file .env pull app
+            docker-compose -f docker/docker-compose.prod.yml --env-file .env up -d --no-deps app
             
-  #           # 사용하지 않는 이미지 정리
-  #           docker image prune -af
+            # 사용하지 않는 이미지 정리
+            docker image prune -af
